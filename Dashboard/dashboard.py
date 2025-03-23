@@ -21,7 +21,7 @@ import matplotlib.ticker as mticker
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("all_data.csv")
+    df = pd.read_csv("Dashboard/all_data.csv")
 
 
     reverse_mapping = {"Spring": 1, "Summer": 2, "Fall": 3, "Winter": 4}
