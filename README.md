@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ```
 !pip install -q streamlit
 
-`!npm install localtunnel`
+!npm install localtunnel
 ```
 
 ## Run steamlit app
