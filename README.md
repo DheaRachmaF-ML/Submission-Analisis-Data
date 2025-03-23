@@ -1,11 +1,13 @@
 # Submission-Analisis-Data
 
 ## Setup Environment - Terminal
-`python -m venv myenv1`
+```
+python -m venv myenv1
 
-`myenv\Scripts\activate`
+myenv\Scripts\activate
 
-`pip install -r requirements.txt`
+pip install -r requirements.txt
+```
 
 ## Setup Environment - Google Colab
 `!pip install -q streamlit`
