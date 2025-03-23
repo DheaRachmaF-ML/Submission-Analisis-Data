@@ -10,9 +10,13 @@ pip install -r requirements.txt
 ```
 
 ## Setup Environment - Google Colab
-`!pip install -q streamlit`
+```
+!pip install -q streamlit
 
 `!npm install localtunnel`
+```
 
 ## Run steamlit app
-`!streamlit run app.py &>/content/logs.txt & npx localtunnel --port 8501 & curl ipv4.icanhazip.com`
+```
+!streamlit run app.py &>/content/logs.txt & npx localtunnel --port 8501 & curl ipv4.icanhazip.com
+```
