@@ -147,6 +147,6 @@ Original file is located at
 # st.sidebar.write("📌 **Data dari Bike Sharing Dataset**")
 #
 
-!npm install localtunnel
+# !npm install localtunnel
 
-!streamlit run app.py &>/content/logs.txt & npx localtunnel --port 8501 & curl ipv4.icanhazip.com
+# !streamlit run app.py &>/content/logs.txt & npx localtunnel --port 8501 & curl ipv4.icanhazip.com
