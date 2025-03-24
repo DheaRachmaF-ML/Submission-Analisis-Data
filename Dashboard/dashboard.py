@@ -11,6 +11,7 @@
 
 # Commented out IPython magic to ensure Python compatibility.
 # %%writefile dashboard.py
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -20,7 +21,7 @@ import matplotlib.ticker as mticker
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("Dashboard/all_data.csv")
+    df = pd.read_csv("all_data.csv")
 
     # Konversi kolom dteday ke datetime
     df['dteday'] = pd.to_datetime(df['dteday'], errors='coerce')
@@ -123,6 +124,7 @@ elif menu == "Heatmap Korelasi":
     st.pyplot(fig)
 
 st.sidebar.write("📌 **Data dari Bike Sharing Dataset**")
+
 
 
 
