@@ -18,5 +18,5 @@ pip install -r requirements.txt
 
 ## Run steamlit app
 ```
-!streamlit run app.py &>/content/logs.txt & npx localtunnel --port 8501 & curl ipv4.icanhazip.com
+!streamlit run dashboard.py &>/content/logs.txt & npx localtunnel --port 8501 & curl ipv4.icanhazip.com
 ```
