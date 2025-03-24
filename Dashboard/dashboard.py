@@ -21,7 +21,7 @@ import matplotlib.ticker as mticker
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("all_data.csv")
+    df = pd.read_csv("Dashboard/all_data.csv")
 
     # Konversi kolom dteday ke datetime
     df['dteday'] = pd.to_datetime(df['dteday'], errors='coerce')
