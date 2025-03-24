@@ -18,20 +18,19 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.ticker as mticker
 
-
 @st.cache_data
 def load_data():
     df = pd.read_csv("Dashboard/all_data.csv")
 
+    # Konversi kolom dteday ke datetime
+    df['dteday'] = pd.to_datetime(df['dteday'], errors='coerce')
 
     reverse_mapping = {"Spring": 1, "Summer": 2, "Fall": 3, "Winter": 4}
     if df["season"].dtype == object:
         df["season"] = df["season"].map(reverse_mapping)
 
-
     valid_seasons = {1, 2, 3, 4}
     df = df[df["season"].isin(valid_seasons)]
-
 
     season_mapping = {1: "Spring", 2: "Summer", 3: "Fall", 4: "Winter"}
     df["season"] = df["season"].map(season_mapping)
@@ -44,53 +43,62 @@ df = load_data()
 st.sidebar.title("📊 Bike Sharing Dashboard")
 menu = st.sidebar.radio("Pilih Visualisasi:", ["Total Penyewaan per Musim", "Perbandingan Weekday vs. Weekend", "Heatmap Korelasi"])
 
+# Filter untuk rentang waktu
+st.sidebar.subheader("Filter Rentang Waktu")
+min_date = df['dteday'].min().date()
+max_date = df['dteday'].max().date()
+start_date = st.sidebar.date_input("Tanggal Mulai", min_date, min_value=min_date, max_value=max_date)
+end_date = st.sidebar.date_input("Tanggal Akhir", max_date, min_value=min_date, max_value=max_date)
+
+# Filter untuk musim
+selected_season = st.sidebar.selectbox("Pilih Musim", ["All"] + list(df["season"].unique()))
+
+# Konversi input tanggal ke datetime
+start_date = pd.to_datetime(start_date)
+end_date = pd.to_datetime(end_date)
+
+# Filter data berdasarkan rentang waktu
+df_filtered = df[(df['dteday'] >= start_date) & (df['dteday'] <= end_date)]
+
+# Filter berdasarkan musim jika tidak memilih "All"
+if selected_season != "All":
+    df_filtered = df_filtered[df_filtered["season"] == selected_season]
+
+# Tampilkan informasi tentang data yang difilter
+st.write(f"📅 Data ditampilkan dari {start_date.date()} hingga {end_date.date()}.")
+st.write(f"🔢 Jumlah data setelah filter: {df_filtered.shape[0]}")
+
 # 1️⃣ Total Penyewaan Sepeda per Musim
 if menu == "Total Penyewaan per Musim":
     st.subheader("📊 Total Penyewaan Sepeda Berdasarkan Musim")
-
-    if "season" not in df.columns or "cnt" not in df.columns:
+    
+    if "season" not in df_filtered.columns or "cnt" not in df_filtered.columns:
         st.error("❌ Data tidak memiliki kolom 'season' atau 'cnt'.")
     else:
-        # Hitung total penyewaan per musim & urutkan dari terbesar ke terkecil
-        total_season = df.groupby("season")["cnt"].sum().sort_values(ascending=False)
-
+        total_season = df_filtered.groupby("season")["cnt"].sum().sort_values(ascending=False)
+        
         # Warna disesuaikan dengan urutan baru
-        season_colors = {
-            "Fall": "blue",
-            "Summer": "pink",
-            "Winter": "lightblue",
-            "Spring": "red"
-        }
+        season_colors = {"Fall": "blue", "Summer": "pink", "Winter": "lightblue", "Spring": "red"}
         colors = [season_colors[season] for season in total_season.index]
 
         # Plot
         fig, ax = plt.subplots(figsize=(8, 5))
         total_season.plot(kind="bar", color=colors, ax=ax)
-
         ax.set_xlabel("Musim")
         ax.set_ylabel("Total Penyewaan")
         ax.set_title("Total Penyewaan Sepeda Berdasarkan Musim (Diurutkan)")
         plt.xticks(rotation=0)
-
-        # Format angka sumbu Y agar lebih mudah dibaca
-        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'{x/1e6:.1f}M'))  # Format 1.0M, 0.8M, dll.
-
+        ax.yaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'{x/1e6:.1f}M'))
         st.pyplot(fig)
-
-        # Info
-        max_season = total_season.idxmax()
-        min_season = total_season.idxmin()
-        st.write(f"🔹 **Musim dengan Penyewaan Tertinggi**: {max_season} ({total_season.max():,.0f} penyewaan)")
-        st.write(f"🔸 **Musim dengan Penyewaan Terendah**: {min_season} ({total_season.min():,.0f} penyewaan)")
 
 # 2️⃣ Perbandingan Penyewaan Sepeda: Weekday vs. Weekend
 elif menu == "Perbandingan Weekday vs. Weekend":
     st.subheader("📊 Perbandingan Penyewaan Sepeda: Weekday vs. Weekend")
-
-    if "workingday" not in df.columns or "cnt" not in df.columns:
+    
+    if "workingday" not in df_filtered.columns or "cnt" not in df_filtered.columns:
         st.error("❌ Data tidak memiliki kolom 'workingday' atau 'cnt'.")
     else:
-        workingday_stats = df.groupby("workingday")["cnt"].mean()
+        workingday_stats = df_filtered.groupby("workingday")["cnt"].mean()
         workingday_labels = ["Weekend", "Weekday"]
 
         # Plot
@@ -101,22 +109,12 @@ elif menu == "Perbandingan Weekday vs. Weekend":
         ax.set_title("Perbandingan Penyewaan Sepeda: Weekday vs. Weekend")
         st.pyplot(fig)
 
-        # Info
-        max_day = workingday_labels[np.argmax(workingday_stats.values)]
-        min_day = workingday_labels[np.argmin(workingday_stats.values)]
-        diff = abs(workingday_stats[1] - workingday_stats[0])
-
-        st.write(f"🔹 **Hari dengan Penyewaan Tertinggi**: {max_day} ({workingday_stats.max():,.0f} penyewaan)")
-        st.write(f"🔸 **Hari dengan Penyewaan Terendah**: {min_day} ({workingday_stats.min():,.0f} penyewaan)")
-        st.write(f"📊 **Selisih Rata-rata Penyewaan**: {diff:,.0f} penyewaan")
-
-
 # 3️⃣ Heatmap Korelasi Faktor-faktor Penyewaan Sepeda
 elif menu == "Heatmap Korelasi":
     st.subheader("📊 Korelasi Faktor-faktor Penyewaan Sepeda")
 
     numeric_cols = ["cnt", "temp", "atemp", "hum", "windspeed", "weathersit", "workingday"]
-    correlation_matrix = df[numeric_cols].corr()
+    correlation_matrix = df_filtered[numeric_cols].corr()
 
     # Plot Heatmap
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -124,27 +122,8 @@ elif menu == "Heatmap Korelasi":
     ax.set_title("Correlation Heatmap of Bike Sharing Data")
     st.pyplot(fig)
 
-    # Informasi tambahan yang lebih mudah dipahami
-    correlations = correlation_matrix["cnt"].drop("cnt")  # Ambil korelasi terhadap "cnt" saja
-    max_corr_feature = correlations.idxmax()
-    min_corr_feature = correlations.idxmin()
-
-    st.write(f"🔹 **Faktor dengan Korelasi Tertinggi terhadap Penyewaan Sepeda**: {max_corr_feature} ({correlations.max():.2f})")
-    st.write(f"🔸 **Faktor dengan Korelasi Terendah terhadap Penyewaan Sepeda**: {min_corr_feature} ({correlations.min():.2f})")
-
-    # Interpretasi
-    st.write("📌 **Interpretasi:**")
-    st.write(
-        f"- **{max_corr_feature}** memiliki korelasi tertinggi, artinya semakin tinggi nilai {max_corr_feature}, "
-        "semakin tinggi jumlah penyewaan sepeda."
-    )
-    st.write(
-        f"- **{min_corr_feature}** memiliki korelasi terendah (atau negatif), artinya faktor ini memiliki "
-        "pengaruh paling kecil atau bahkan berlawanan terhadap penyewaan sepeda."
-    )
-
-
 st.sidebar.write("📌 **Data dari Bike Sharing Dataset**")
+
 
 
 # !npm install localtunnel
